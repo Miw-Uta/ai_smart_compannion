@@ -60,12 +60,25 @@ if prompt:  # 避免提示词为空时,消息框显示None
             # {"role": "user", "content": prompt}, 用户输入的问题
             *st.session_state['messages'], # 历史会话信息(解包列表ls=[*ls1,*ls2,*ls3])
         ],
-        stream=False,
+        stream=True,
         reasoning_effort="high",
         extra_body={"thinking": {"type": "enabled"}}
     )
+    
+    # 显示大模型返回的结果 (非流式输出)
+    # st.chat_message("assistant").write(response.choices[0].message.content)
+    # print(f"<-----------大模型返回的结果：{response.choices[0].message.content}")
+    # # 将大模型返回的结果存储起来
+    # st.session_state['messages'].append({"role": "assistant", "content": response.choices[0].message.content})     
 
-    # 显示大模型返回的结果
-    st.chat_message("assistant").write(response.choices[0].message.content)
-    print(f"<-----------大模型返回的结果：{response.choices[0].message.content}")
-    st.session_state['messages'].append({"role": "assistant", "content": response.choices[0].message.content})     # 将大模型返回的结果存储起来
+
+    # 显示大模型返回的结果 (流式输出)
+    full_response = ""
+    message_empty = st.empty()  # 创建一个空的消息框,用来显示大模型返回的结果
+    for chunk in response:
+        if chunk.choices[0].delta.content:
+            full_response += chunk.choices[0].delta.content
+            message_empty.chat_message("assistant").write(full_response)
+    print(f"----------->大模型返回的结果：{full_response}")
+    st.session_state['messages'].append({"role": "assistant", "content": full_response})     
+    
