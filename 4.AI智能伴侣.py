@@ -43,6 +43,7 @@ def get_session_files():
         for file in session_files_list:
             if file.endswith(".json"):
                 file_name_list.append(file[:-5])
+                file_name_list.sort(reverse=True)
     return file_name_list
 
 
@@ -136,7 +137,8 @@ with st.sidebar:    # with: 管理上下文
                 delete_session(file_name)
                 st.rerun()
 
-
+# 分隔线
+    st.divider()
 
 # 伴侣信息
     st.subheader("伴侣信息")
