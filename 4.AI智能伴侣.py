@@ -111,8 +111,8 @@ with st.sidebar:    # with: 管理上下文
         # 2. 新建会话
         if st.session_state['messages']:
             st.session_state['messages'] = []
-            st.session_state['partner_name'] = "林晚"
-            st.session_state['partner_personality'] = "温柔体贴的台湾女孩"
+            # st.session_state['partner_name'] = "林晚"(始终使用用户设置的值,所以注释掉)
+            # st.session_state['partner_personality'] = "温柔体贴的台湾女孩"
             st.session_state['session_time'] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             save_session()
             st.rerun()
