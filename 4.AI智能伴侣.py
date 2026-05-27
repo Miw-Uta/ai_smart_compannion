@@ -2,6 +2,8 @@
 import os
 from openai import OpenAI
 import streamlit as st
+from datetime import datetime
+import json
 
 
 # 设置页面配置项
@@ -16,6 +18,59 @@ st.set_page_config(
         'About': "# This is a header. This is an *extremely* cool app!"
     }
 )
+
+def save_session():
+    # 1. 保存会话信息
+        if st.session_state['session_time']:
+            session_dict = {
+                "messages":st.session_state['messages'],
+                "partner_name":st.session_state['partner_name'],
+                "partner_personality":st.session_state['partner_personality'],
+                "session_time":st.session_state['session_time']
+            }
+            # 如果session文件夹不存在,则创建一个
+            if not os.path.exists("session"):
+                os.makedirs("session")
+            # 写入文件
+            with open(f"session/{st.session_state['session_time']}.json","w",encoding="utf-8") as f:
+                json.dump(session_dict,f,ensure_ascii=False,indent=2)
+
+# 获取历史会话文件名列表
+def get_session_files():
+    file_name_list = []
+    if os.path.exists("session"):
+        session_files_list = os.listdir("session")
+        for file in session_files_list:
+            if file.endswith(".json"):
+                file_name_list.append(file[:-5])
+    return file_name_list
+
+
+# 加载历史会话文件信息
+def load_session(file_name):
+    try:
+        if os.path.exists(f"session/{file_name}.json"):
+            with open(f"session/{file_name}.json","r",encoding="utf-8") as f:
+                session_dict = json.load(f)
+                st.session_state['messages'] = session_dict['messages']
+                st.session_state['partner_name'] = session_dict['partner_name']
+                st.session_state['partner_personality'] = session_dict['partner_personality']
+                st.session_state['session_time'] = session_dict['session_time']
+    except Exception as e:
+        st.error(f"加载会话时出错：{e}")
+
+
+# 删除历史会话文件
+def delete_session(file_name):
+    try:
+        if os.path.exists(f"session/{file_name}.json"):
+            os.remove(f"session/{file_name}.json")
+            if file_name == st.session_state['session_time']:
+                st.session_state['messages'] = []
+                st.session_state['session_time'] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    except Exception as e:
+        st.error(f"删除会话时出错：{e}")
+            
 
 # 标题
 st.title("AI智能伴侣")
@@ -32,15 +87,58 @@ if 'partner_name' not in st.session_state:
 if 'partner_personality' not in st.session_state:
     st.session_state['partner_personality'] = "温柔体贴的台湾女孩"
 
+# 初始化会话时间
+if 'session_time' not in st.session_state:
+    st.session_state['session_time'] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 
 # 显示历史会话信息
+st.text(f"会话时间：{st.session_state['session_time']}")
 for message in st.session_state['messages']:
     st.chat_message(message['role']).write(message['content'])
+    
 
 # 侧边栏
 
-# 侧边栏: 伴侣信息
 with st.sidebar:    # with: 管理上下文
+# AI 控制面板
+    st.subheader("AI 控制面板")
+    # 新建会话按钮
+    if st.button("新建会话",width="stretch",icon="✏️"):
+        # 1. 保存当前会话信息
+        save_session()
+        # 2. 新建会话
+        if st.session_state['messages']:
+            st.session_state['messages'] = []
+            st.session_state['partner_name'] = "林晚"
+            st.session_state['partner_personality'] = "温柔体贴的台湾女孩"
+            st.session_state['session_time'] = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            save_session()
+            st.rerun()
+
+
+# 显示历史会话信息
+    st.text("历史会话")
+    # 获取历史会话的文件名列表
+    file_name_list = get_session_files()
+    # 显示历史会话文件名
+    for file_name in file_name_list:
+        print(file_name)
+        col1,col2 = st.columns([4,1])
+        with col1:
+            if st.button(file_name,width="stretch",icon="🔄",type="primary" if file_name == st.session_state['session_time'] else "secondary"):
+                # 加载历史会话
+                load_session(file_name)
+                st.rerun()
+
+        with col2:
+            if st.button("",width="stretch",icon="❌",key=file_name):
+                delete_session(file_name)
+                st.rerun()
+
+
+
+# 伴侣信息
     st.subheader("伴侣信息")
     # 姓名输入框
     partner_name = st.text_input("姓名",st.session_state['partner_name'],placeholder="请输入伴侣的姓名")# 顺序传入第二个参数就是value
@@ -53,7 +151,7 @@ with st.sidebar:    # with: 管理上下文
 
 
 # logo
-st.logo("./rescource/logo.png")
+st.logo("./resource/logo.png")
 
 # 创建客户对象
 client = OpenAI(
@@ -121,6 +219,10 @@ if prompt:  # 避免提示词为空时,消息框显示None
         if chunk.choices[0].delta.content:
             full_response += chunk.choices[0].delta.content
             message_empty.chat_message("assistant").write(full_response)
-    print(f"----------->大模型返回的结果：{full_response}")
-    st.session_state['messages'].append({"role": "assistant", "content": full_response})     
+    print(f"<-----------大模型返回的结果：{full_response}")
+    st.session_state['messages'].append({"role": "assistant", "content": full_response})   
+
+    # 保存会话信息
+    save_session()
+
     
