@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表格的增删改查</title>
+    <style>
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 36px;
+        }
+
+        th,td{
+            border: solid red 2px;
+            text-align: center;
+            padding: 8px;
+        }
+        button{
+            margin-left: 10px;
+        }
+        th{
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">表格的增删改查</h1>
+    <button onclick="addrow()">添加数据</button>
+    <table id="table">
+        <tr>
+            <th>姓名</th>
+            <th>电话</th>
+            <th>操作</th>
+        </tr>
+        <tr>
+            <td>小明</td>
+            <td>12345678910</td>
+            <td>
+                <button onclick=" editrow(this)">编辑</button>
+                <button onclick="delrow(this)">删除</button>
+                <!-- 传递this是为了让JavaScript函数delrow()知道是哪个
+                 按钮被点击了，从而找到表格行tr进行删除-->
+            </td>
+        </tr>
+    </table>
+    <script>
+        // alert('表格的增删改查')
+        // 新增数据函数
+        function addrow() {
+        let table = document.getElementById('table');
+        //  console.log(table);
+        // 获取表格插入的位置
+        let length = table.rows.length;
+        //  console.log (length)
+
+        // 插入行节点
+        let newrow = table.insertRow(length);
+        console.log (newrow)
+        // newrow.innerHTML=('123456')
+
+        // 插入列节点对象
+        let nameCol = newrow.insertCell(0);
+        let phoneCol = newrow.insertCell(1);
+        let actionCol = newrow.insertCell(2);
+        // 修改节点文本对象
+        nameCol.innerHTML=('未命名')
+        phoneCol.innerHTML=('无联系方式')
+        actionCol.innerHTML=('<button onclick=" editrow(this)">编辑</button> <button onclick="delrow(this)">删除</button>')
+        }
+
+
+        // 删除数据函数
+        function delrow (button) {
+            console.log(button)
+            let row = button.parentNode.parentNode;
+            console.log (row)
+            row.parentNode.removeChild(row)
+        }
+
+
+        // 编辑数据函数
+        function editrow(button) {
+            console.log (button)
+            let row = button.parentNode.parentNode;
+            console.log(row);
+            let name = row.cells[0]
+            let phone = row.cells[1]
+            
+            let inputname = prompt('请输入姓名')
+            let inputphone = prompt('请输入联系方式')
+
+            // name.innerHTML=inputname
+            // phone.innerHTML=inputphone
+
+
+
+
+            
+            // 改进内容
+
+            let oringnalName = name.innerText;
+            let oringnalPhone = phone.innerText;
+        
+            if (!inputname && !inputphone) {
+                alert('编辑内容为空，编辑失败')
+            }else if (!inputname){
+                name.innerHTML=oringnalName
+                phone.innerHTML=inputphone
+            }else if (!inputphone){
+                name.innerHTML=inputname
+                phone.innerHTML=oringnalPhone
+            }else{
+            name.innerHTML=inputname
+            phone.innerHTML=inputphone
+            }
+        }
+    </script>
+</body>
+</html>
